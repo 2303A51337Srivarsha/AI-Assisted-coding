@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>SmartMart — Online Supermarket</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ════════════════ LOGIN ════════════════ -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-logo-bar">
+      <div class="lname">smartmart</div>
+      <div class="lsub">Online Supermarket System</div>
+    </div>
+    <div class="login-box">
+      <h2>Sign In</h2>
+      <div class="fg"><label>Your Name</label><input id="login-user" type="text" placeholder="Enter your name" value="Arun Kumar"></div>
+      <p style="font-size:13px;font-weight:700;color:#111;margin-bottom:8px">Choose your role</p>
+      <div class="role-cards">
+        <div class="role-card" id="rc-customer" onclick="selectRole('customer')">
+          <span class="rc-icon">🛒</span>
+          <div class="rc-name">Customer</div>
+          <div class="rc-sub">Browse & buy</div>
+        </div>
+        <div class="role-card" id="rc-staff" onclick="selectRole('staff')">
+          <span class="rc-icon">🧾</span>
+          <div class="rc-name">Staff</div>
+          <div class="rc-sub">Orders & stock</div>
+        </div>
+        <div class="role-card" id="rc-admin" onclick="selectRole('admin')">
+          <span class="rc-icon">🔐</span>
+          <div class="rc-name">Admin</div>
+          <div class="rc-sub">Full access</div>
+        </div>
+      </div>
+      <input type="hidden" id="hidden-role" value="customer">
+      <div class="fg"><label>Password</label><input id="login-pass" type="password" placeholder="Any password for demo"></div>
+      <button class="login-btn" onclick="login()">Sign in</button>
+      <div class="login-hint">Demo: enter any name & password<br>Customer sees shop | Staff sees orders | Admin sees everything</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ CUSTOMER APP ════════════════ -->
+<div id="customer-app">
+
+  <!-- Amazon-style top nav -->
+  <nav class="amz-topnav">
+    <div class="amz-logo">smartmart<span>Online Supermarket</span></div>
+    <div class="amz-deliver">
+      <div>Deliver to</div>
+      <strong>Chennai 600001</strong>
+    </div>
+    <div class="amz-searchbar">
+      <select class="amz-search-cat">
+        <option>All</option>
+        <option>Dairy</option><option>Fruits</option><option>Snacks</option><option>Beverages</option>
+      </select>
+      <input class="amz-search-input" id="shop-search-inp" type="text" placeholder="Search products, brands, categories…" oninput="shopSearch(this.value)">
+      <button class="amz-search-btn">🔍</button>
+    </div>
+    <div class="amz-nav-right">
+      <button class="amz-navbtn" onclick="showShopView('products')">
+        <div>Hello, <span id="cust-name-display">User</span></div>
+        <strong>Account</strong>
+      </button>
+      <button class="amz-navbtn" id="nav-myorders" onclick="showShopView('myorders')">
+        <div>Returns &</div>
+        <strong>My Orders</strong>
+      </button>
+      <button class="amz-cart-btn" onclick="toggleCart()">
+        <span id="cart-count" class="amz-cart-count">0</span>
+        🛒 Cart
+      </button>
+      <button class="amz-navbtn" onclick="custLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <!-- Sub nav - categories -->
+  <div class="amz-subnav" id="shop-subnav"></div>
+
+  <!-- Products view -->
+  <div id="shop-products-view">
+    <div class="shop-body">
+      <!-- Left sidebar -->
+      <aside class="shop-sidebar-left">
+        <h4>Department</h4>
+        <div id="shop-sidebar-cats"></div>
+      </aside>
+      <!-- Main grid -->
+      <div class="shop-main">
+        <div class="shop-result-bar" id="result-count">Loading products…</div>
+        <div class="shop-grid" id="shop-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Orders view -->
+  <div id="shop-myorders-view" style="display:none">
+    <div class="my-orders-page">
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:16px">Your Orders</h2>
+      <div id="my-orders-list"></div>
+    </div>
+  </div>
+
+  <!-- Cart drawer -->
+  <div class="cart-drawer" id="cart-drawer">
+    <div class="cd-header">
+      <div class="cd-title">🛒 Shopping Cart</div>
+      <button class="cd-close" onclick="closeCart()">✕</button>
+    </div>
+    <div class="cd-items" id="cd-items"></div>
+    <div class="cd-footer">
+      <div class="cd-subtotal"><span>Subtotal</span><span id="cart-sub">₹0</span></div>
+      <div class="cd-subtotal"><span>GST (5%)</span><span id="cart-gst">₹0</span></div>
+      <div class="cd-subtotal grand"><span>Order Total</span><span id="cart-grand">₹0</span></div>
+      <button class="btn-checkout" onclick="showCheckout()">Proceed to Checkout →</button>
+    </div>
+  </div>
+
+  <!-- Checkout Modal -->
+  <div class="modal-backdrop" id="checkout-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>📦 Checkout</h3>
+        <button class="modal-close" onclick="closeModal('checkout-modal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="order-summary-box">
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px">Order Summary</div>
+          <div id="co-items-list"></div>
+          <div class="osb-row"><span>Subtotal</span><span id="co-sub">₹0</span></div>
+          <div class="osb-row"><span>GST (5%)</span><span id="co-gst">₹0</span></div>
+          <div class="osb-row total-row"><span>Order Total</span><span id="co-grand">₹0</span></div>
+        </div>
+        <div class="fg"><label>Full Name</label><input id="co-name-inp" type="text" placeholder="Your full name"></div>
+        <div class="fg"><label>Phone Number</label><input id="co-phone-inp" type="tel" placeholder="10-digit mobile number"></div>
+        <div class="fg"><label>Delivery Address</label><input id="co-addr-inp" type="text" placeholder="Flat, Street, City, Pincode"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal('checkout-modal')">Cancel</button>
+        <button class="btn-place" onclick="confirmOrder()">Place Order →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal-backdrop success-modal" id="success-modal">
+    <div class="modal-box">
+      <div class="modal-header" style="background:#067D62">
+        <h3>Order Confirmed!</h3>
+        <button class="modal-close" onclick="closeModal('success-modal')">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center">
+        <div class="success-icon">✅</div>
+        <h3 style="font-size:18px;font-weight:700;margin-bottom:6px">Thank you for your order!</h3>
+        <p style="font-size:13px;color:#888;margin-bottom:16px">Your order has been placed and staff will prepare it shortly.</p>
+        <div class="order-summary-box" style="text-align:left">
+          <div class="osb-row"><span>Order ID</span><strong id="success-id">—</strong></div>
+          <div class="osb-row"><span>Items</span><strong id="success-items">—</strong></div>
+          <div class="osb-row"><span>Total Units</span><strong id="success-units">—</strong></div>
+          <div class="osb-row total-row"><span>Amount Paid</span><strong id="success-total" style="color:#067D62">—</strong></div>
+          <div class="osb-row"><span>Status</span><strong style="color:#e47911">Pending 🕐</strong></div>
+          <div class="osb-row"><span>Estimated Delivery</span><strong>30–45 minutes</strong></div>
+        </div>
+        <p style="font-size:12px;color:#aaa;margin-bottom:16px">Check "My Orders" to track your order status</p>
+        <button class="btn-place" style="width:100%" onclick="closeModal('success-modal');showShopView('products')">Continue Shopping</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end customer-app -->
+
+<!-- ════════════════ ADMIN / STAFF DASHBOARD ════════════════ -->
+<div id="app">
+
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sm-name">smartmart</div>
+      <div class="sm-sub">Management Dashboard</div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-label">Dashboard</div>
+      <button class="sb-item active" id="nav-overview" onclick="showSection('overview')"><span class="sb-icon">◉</span> Overview</button>
+      <button class="sb-item" id="nav-alerts" onclick="showSection('alerts')">
+        <span class="sb-icon">⚑</span> Alerts
+        <span class="sb-badge" id="alert-badge" style="display:none">0</span>
+      </button>
+      <div class="sb-label">Operations</div>
+      <button class="sb-item" id="nav-inventory" onclick="showSection('inventory')"><span class="sb-icon">◫</span> Inventory</button>
+      <button class="sb-item" id="nav-orders" onclick="showSection('orders')"><span class="sb-icon">◱</span> Orders</button>
+      <button class="sb-item admin-only" id="nav-profit" onclick="showSection('profit')"><span class="sb-icon">◈</span> Profit &amp; Loss</button>
+      <button class="sb-item admin-only" id="nav-analytics" onclick="showSection('analytics')"><span class="sb-icon">◎</span> Analytics</button>
+      <button class="sb-item admin-only" id="nav-suppliers" onclick="showSection('suppliers')"><span class="sb-icon">◧</span> Suppliers</button>
+    </nav>
+    <div class="sb-user">
+      <div class="sb-user-inner">
+        <div class="sb-avatar" id="sb-initials">AD</div>
+        <div><div class="sb-uname" id="sb-uname">Admin</div><div class="sb-urole" id="sb-urole">Admin</div></div>
+        <button class="sb-logout" onclick="logout()">Out</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- OVERVIEW -->
+    <div class="section active" id="sec-overview">
+      <div class="pg-header">
+        <div><div class="pg-title">Dashboard Overview</div><div class="pg-sub">Live data — updates when customer purchases</div></div>
+        <div class="pg-chip">Wed, 1 Apr 2026</div>
+      </div>
+      <div class="metrics">
+        <div class="metric-card"><div class="mc-label">Products</div><div class="mc-val" id="m-products">—</div></div>
+        <div class="metric-card"><div class="mc-label">Stock Available</div><div class="mc-val grn" id="m-stock">—</div></div>
+        <div class="metric-card"><div class="mc-label">Total Sold</div><div class="mc-val blu" id="m-sold">—</div></div>
+        <div class="metric-card"><div class="mc-label">Revenue</div><div class="mc-val grn" id="m-revenue">—</div></div>
+        <div class="metric-card"><div class="mc-label">Gross Profit</div><div class="mc-val grn" id="m-profit">—</div></div>
+        <div class="metric-card"><div class="mc-label">Total Orders</div><div class="mc-val" id="m-orders">—</div><div class="mc-sub" id="m-pending">—</div></div>
+        <div class="metric-card"><div class="mc-label">Low Stock</div><div class="mc-val red" id="m-lowstock">—</div></div>
+        <div class="metric-card"><div class="mc-label">Expiring ≤5d</div><div class="mc-val org" id="m-expiring">—</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Weekly Sales</div><div class="card-sub">Revenue vs Cost</div></div>
+          <div class="legend"><span><span class="ldot" style="background:#FF9900"></span>Revenue</span><span><span class="ldot" style="background:#37475a"></span>Cost</span></div>
+          <div class="chart-wrap" style="height:200px"><canvas id="weeklyChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Category Split</div><div class="card-sub">Units sold</div></div>
+          <div class="chart-wrap" style="height:220px"><canvas id="catChart"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Top 10 Products by Sales</div></div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Product</th><th>Category</th><th>Units Sold</th><th>Revenue</th><th>Margin</th><th>Status</th></tr></thead>
+          <tbody id="top-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    <div class="section" id="sec-alerts">
+      <div class="pg-header">
+        <div><div class="pg-title">Alerts &amp; Notifications</div><div class="pg-sub">Expiry + Low Stock — role-based</div></div>
+      </div>
+      <div class="as-grid">
+        <div class="as-card as-danger"><div class="as-count" id="al-danger">0</div><div class="as-label">Critical</div></div>
+        <div class="as-card as-warning"><div class="as-count" id="al-warn">0</div><div class="as-label">Warnings</div></div>
+        <div class="as-card as-info"><div class="as-count" id="al-info">0</div><div class="as-label">Info</div></div>
+        <div class="as-card" style="background:#fce4ec;border-color:#f48fb1"><div class="as-count" id="al-exp" style="color:#880e4f">0</div><div class="as-label">Expiry Alerts</div></div>
+        <div class="as-card" style="background:#fbe9e7;border-color:#ffccbc"><div class="as-count" id="al-stk" style="color:#bf360c">0</div><div class="as-label">Stock Alerts</div></div>
+        <div class="as-card" style="background:#e8f5e9;border-color:#a5d6a7"><div class="as-count" id="al-total" style="color:#1b5e20">0</div><div class="as-label">Total Alerts</div></div>
+      </div>
+      <div class="card">
+        <div class="tab-grp">
+          <button class="tab-btn alert-tab active" data-filter="all" onclick="renderAlertsPage('all')">All</button>
+          <button class="tab-btn alert-tab" data-filter="expiry" onclick="renderAlertsPage('expiry')">Expiry Only</button>
+          <button class="tab-btn alert-tab" data-filter="stock" onclick="renderAlertsPage('stock')">Stock Only</button>
+          <button class="tab-btn alert-tab" data-filter="info" onclick="renderAlertsPage('info')">Info</button>
+        </div>
+        <div id="alerts-container"></div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="section" id="sec-inventory">
+      <div class="pg-header">
+        <div><div class="pg-title">Inventory Management</div><div class="pg-sub">55 products — stock updates live after purchases</div></div>
+        <span id="inv-count" class="pg-chip">55 products</span>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Stock by Category</div></div>
+        <div class="chart-wrap" style="height:210px"><canvas id="invCatChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">All Products</div></div>
+        <div class="filters">
+          <input type="search" placeholder="Search…" style="min-width:150px" oninput="renderInvTable(undefined,undefined,this.value)">
+          <select id="inv-cat-filter" onchange="renderInvTable(this.value)"><option value="">All categories</option></select>
+          <select onchange="renderInvTable(undefined,this.value)">
+            <option value="">All status</option><option value="ok">In stock</option>
+            <option value="low">Low stock</option><option value="out">Out of stock</option><option value="expiring">Expiring ≤5d</option>
+          </select>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>ID</th><th>Product</th><th>Category</th><th>Stock</th><th>Sold</th><th>Fill %</th><th>Cost ₹</th><th>Price ₹</th><th>Margin</th><th>Expiry</th><th>Status</th><th>Supplier</th></tr></thead>
+          <tbody id="inv-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ORDERS — Staff + Admin see customer orders here -->
+    <div class="section" id="sec-orders">
+      <div class="pg-header">
+        <div><div class="pg-title">Customer Orders</div><div class="pg-sub">★ New orders from customers appear at the top in orange</div></div>
+      </div>
+      <div class="metrics">
+        <div class="metric-card"><div class="mc-label">Total Orders</div><div class="mc-val" id="ord-total">—</div></div>
+        <div class="metric-card"><div class="mc-label">Delivered</div><div class="mc-val grn" id="ord-del">—</div></div>
+        <div class="metric-card"><div class="mc-label">Packed</div><div class="mc-val blu" id="ord-packed">—</div></div>
+        <div class="metric-card"><div class="mc-label">Pending</div><div class="mc-val org" id="ord-pend">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-title">All Orders</div>
+          <div style="font-size:12px;color:#067D62;font-weight:700">Customer purchases update here instantly</div>
+        </div>
+        <div class="filters">
+          <button class="fbtn active" onclick="renderOrdersTable('all');setFBtn(this)">All</button>
+          <button class="fbtn" onclick="renderOrdersTable('Pending');setFBtn(this)">Pending</button>
+          <button class="fbtn" onclick="renderOrdersTable('Packed');setFBtn(this)">Packed</button>
+          <button class="fbtn" onclick="renderOrdersTable('Delivered');setFBtn(this)">Delivered</button>
+        </div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Units</th><th>Amount</th><th>GST</th><th>Total Paid</th><th>Time</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="orders-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- PROFIT & LOSS (admin only) -->
+    <div class="section" id="sec-profit">
+      <div class="pg-header"><div><div class="pg-title">Profit &amp; Loss</div><div class="pg-sub">Admin only</div></div></div>
+      <div class="metrics">
+        <div class="metric-card"><div class="mc-label">Revenue Today</div><div class="mc-val grn">₹84,200</div></div>
+        <div class="metric-card"><div class="mc-label">Cost Today</div><div class="mc-val red">₹65,780</div></div>
+        <div class="metric-card"><div class="mc-label">Gross Profit</div><div class="mc-val grn">₹18,420</div></div>
+        <div class="metric-card"><div class="mc-label">Margin</div><div class="mc-val grn">21.9%</div></div>
+        <div class="metric-card"><div class="mc-label">GST Collected</div><div class="mc-val">₹7,578</div></div>
+        <div class="metric-card"><div class="mc-label">Net Profit</div><div class="mc-val grn">₹10,842</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">30-Day P&amp;L</div><div class="card-sub">🟢 Profit | 🔴 Loss</div></div>
+        <div class="chart-wrap" style="height:220px"><canvas id="plChart"></canvas></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Top 10 Highest Margin</div></div>
+          <div class="chart-wrap" style="height:280px"><canvas id="marginChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Monthly Summary</div></div>
+          <table>
+            <thead><tr><th>Month</th><th>Revenue</th><th>Cost</th><th>Profit</th><th>Margin</th></tr></thead>
+            <tbody>
+              <tr><td>January</td><td>₹18.2L</td><td>₹14.6L</td><td>₹3.6L</td><td><span class="badge b-green">19.8%</span></td></tr>
+              <tr><td>February</td><td>₹16.8L</td><td>₹13.7L</td><td>₹3.1L</td><td><span class="badge b-amber">18.5%</span></td></tr>
+              <tr><td>March</td><td>₹21.4L</td><td>₹17.0L</td><td>₹4.4L</td><td><span class="badge b-green">20.6%</span></td></tr>
+              <tr><td>April</td><td>₹2.5L</td><td>₹1.9L</td><td>₹0.5L</td><td><span class="badge b-blue">Ongoing</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="section" id="sec-analytics">
+      <div class="pg-header"><div><div class="pg-title">Sales Analytics</div><div class="pg-sub">Admin only</div></div></div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Hourly Order Volume</div><div class="card-sub">Peak: 6 PM evening</div></div>
+        <div class="chart-wrap" style="height:200px"><canvas id="hourlyChart"></canvas></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-hdr"><div class="card-title">Top 10 Sold Products</div></div><div class="chart-wrap" style="height:300px"><canvas id="topChart"></canvas></div></div>
+        <div class="card"><div class="card-hdr"><div class="card-title">Revenue by Category</div></div><div class="chart-wrap" style="height:300px"><canvas id="catRevChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- SUPPLIERS -->
+    <div class="section" id="sec-suppliers">
+      <div class="pg-header"><div><div class="pg-title">Supplier Management</div><div class="pg-sub">Admin only — 12 suppliers</div></div></div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Supplier Directory</div></div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>ID</th><th>Supplier</th><th>Category</th><th>Contact</th><th>Last Order</th><th>Products</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="sup-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+  </main>
+</div><!-- end app -->
+
+<div id="toast" class="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="data.js"></script>
+<script src="alerts.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
